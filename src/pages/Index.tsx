@@ -13,6 +13,7 @@ import Icon from '@/components/ui/icon';
 interface Account {
   id: string;
   username: string;
+  password: string;
   token: string;
   email: string;
   status: 'active' | 'pending' | 'suspended' | 'registering' | 'configuring';
@@ -31,6 +32,7 @@ const Index = () => {
     {
       id: '1',
       username: '@demo_user',
+      password: 'demo123',
       token: 'Bearer eyJhbGciOiJIUzI1NiIs...',
       email: 'demo@twitter.com',
       status: 'active',
@@ -43,18 +45,20 @@ const Index = () => {
 
   const [formData, setFormData] = useState({
     username: '',
+    password: '',
     token: '',
     email: ''
   });
 
   const [bulkCount, setBulkCount] = useState(1);
+  const [bulkEmails, setBulkEmails] = useState('');
   const [isRegistering, setIsRegistering] = useState(false);
   const [selectedAccount, setSelectedAccount] = useState<Account | null>(null);
   const [postText, setPostText] = useState('');
   const [uploadingImages, setUploadingImages] = useState<{avatar?: File, banner?: File}>({});
 
   const handleAddAccount = () => {
-    if (!formData.username || !formData.token || !formData.email) {
+    if (!formData.username || !formData.password || !formData.token || !formData.email) {
       toast({
         title: "Ошибка",
         description: "Заполните все поля",
@@ -66,6 +70,7 @@ const Index = () => {
     const newAccount: Account = {
       id: Date.now().toString(),
       username: formData.username,
+      password: formData.password,
       token: formData.token,
       email: formData.email,
       status: 'pending',
@@ -76,7 +81,7 @@ const Index = () => {
     };
 
     setAccounts([...accounts, newAccount]);
-    setFormData({ username: '', token: '', email: '' });
+    setFormData({ username: '', password: '', token: '', email: '' });
     
     toast({
       title: "✅ Успешно",
@@ -94,18 +99,31 @@ const Index = () => {
       return;
     }
 
+    const emailList = bulkEmails.trim().split('\n').filter(e => e.trim());
+    
+    if (emailList.length > 0 && emailList.length !== bulkCount) {
+      toast({
+        title: "Ошибка",
+        description: `Введите ${bulkCount} email адресов (по одному на строку) или оставьте поле пустым`,
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsRegistering(true);
     const newAccounts: Account[] = [];
 
     for (let i = 0; i < bulkCount; i++) {
       const timestamp = Date.now() + i;
       const randomNum = Math.floor(Math.random() * 9999);
+      const randomPass = `Pass${Math.random().toString(36).slice(2, 10)}`;
       
       const newAccount: Account = {
         id: timestamp.toString(),
         username: `@user_${randomNum}`,
-        token: `Bearer_auto_${timestamp}`,
-        email: `user${randomNum}@gmx.com`,
+        password: randomPass,
+        token: `Bearer_${timestamp}_${randomNum}`,
+        email: emailList[i] || `user${randomNum}@gmx.com`,
         status: 'registering',
         followers: 0,
         following: 0,
@@ -120,6 +138,7 @@ const Index = () => {
 
     setAccounts([...accounts, ...newAccounts]);
     setIsRegistering(false);
+    setBulkEmails('');
 
     setTimeout(() => {
       setAccounts(prev => prev.map(acc => 
@@ -131,7 +150,7 @@ const Index = () => {
 
     toast({
       title: "🎉 Регистрация завершена",
-      description: `Создано ${bulkCount} аккаунтов GMX и привязано к Twitter`
+      description: `Создано ${bulkCount} аккаунтов и привязано к Twitter`
     });
   };
 
@@ -216,8 +235,27 @@ const Index = () => {
     URL.revokeObjectURL(url);
 
     toast({
-      title: "📁 Экспорт завершен",
+      title: "📁 Экспорт JSON завершен",
       description: `Выгружено ${accounts.length} аккаунтов`
+    });
+  };
+
+  const handleExportTXT = () => {
+    const textData = accounts.map(acc => 
+      `${acc.username}:${acc.password}:${acc.email}:${acc.token}`
+    ).join('\n');
+
+    const dataBlob = new Blob([textData], { type: 'text/plain' });
+    const url = URL.createObjectURL(dataBlob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `twitter-accounts-${Date.now()}.txt`;
+    link.click();
+    URL.revokeObjectURL(url);
+
+    toast({
+      title: "📄 Экспорт TXT завершен",
+      description: `Формат: username:password:email:auth_token`
     });
   };
 
@@ -441,8 +479,23 @@ const Index = () => {
                 </div>
 
                 <div className="space-y-2">
+                  <Label htmlFor="password" className="flex items-center gap-2">
+                    <Icon name="Lock" size={16} className="text-secondary" />
+                    Пароль
+                  </Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="********"
+                    value={formData.password}
+                    onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                    className="bg-muted/30 border-secondary/20 focus:border-secondary"
+                  />
+                </div>
+
+                <div className="space-y-2">
                   <Label htmlFor="email" className="flex items-center gap-2">
-                    <Icon name="Mail" size={16} className="text-secondary" />
+                    <Icon name="Mail" size={16} className="text-accent" />
                     Email
                   </Label>
                   <Input
@@ -451,13 +504,13 @@ const Index = () => {
                     placeholder="email@example.com"
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="bg-muted/30 border-secondary/20 focus:border-secondary"
+                    className="bg-muted/30 border-accent/20 focus:border-accent"
                   />
                 </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="token" className="flex items-center gap-2">
-                    <Icon name="Key" size={16} className="text-accent" />
+                    <Icon name="Key" size={16} className="text-warning" />
                     API Token
                   </Label>
                   <Input
@@ -466,7 +519,7 @@ const Index = () => {
                     placeholder="Bearer xxxxxxxxxx..."
                     value={formData.token}
                     onChange={(e) => setFormData({ ...formData, token: e.target.value })}
-                    className="bg-muted/30 border-accent/20 focus:border-accent font-mono"
+                    className="bg-muted/30 border-warning/20 focus:border-warning font-mono"
                   />
                 </div>
 
@@ -532,6 +585,33 @@ const Index = () => {
                     </div>
                   </div>
                   <Progress value={(bulkCount / 10) * 100} className="h-3" />
+                </div>
+
+                <div className="space-y-3">
+                  <Label htmlFor="bulkEmails" className="flex items-center gap-2 text-lg">
+                    <Icon name="Mail" size={20} className="text-accent" />
+                    GMX Email адреса (опционально)
+                  </Label>
+                  <textarea
+                    id="bulkEmails"
+                    value={bulkEmails}
+                    onChange={(e) => setBulkEmails(e.target.value)}
+                    placeholder={`Введите ${bulkCount} email адресов (по одному на строку):\nuser1@gmx.com\nuser2@gmx.com\n...\n\nИли оставьте пустым для автогенерации`}
+                    rows={8}
+                    className="w-full p-4 bg-muted/30 border-2 border-accent/20 focus:border-accent rounded-lg resize-none focus:outline-none font-mono text-sm"
+                  />
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <span>
+                      {bulkEmails.trim().split('\n').filter(e => e.trim()).length} / {bulkCount} адресов
+                    </span>
+                    {bulkEmails.trim().split('\n').filter(e => e.trim()).length > 0 && 
+                     bulkEmails.trim().split('\n').filter(e => e.trim()).length !== bulkCount && (
+                      <span className="text-warning flex items-center gap-1">
+                        <Icon name="AlertTriangle" size={12} />
+                        Должно быть {bulkCount} адресов
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <Button
@@ -800,7 +880,7 @@ const Index = () => {
                   <Icon name="FileDown" size={24} className="text-primary" />
                   Экспорт данных
                 </CardTitle>
-                <CardDescription>Сохраните базу аккаунтов в JSON формате</CardDescription>
+<CardDescription>Сохраните базу аккаунтов в JSON или TXT формате</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="bg-muted/30 p-6 rounded-lg border border-primary/10">
@@ -817,28 +897,53 @@ const Index = () => {
                   <Progress value={(activeAccounts / Math.max(accounts.length, 1)) * 100} className="h-2" />
                 </div>
 
-                <div className="bg-card/50 p-4 rounded-lg border border-accent/20">
-                  <h4 className="font-semibold mb-2 flex items-center gap-2 text-accent">
-                    <Icon name="Info" size={18} />
-                    Формат экспорта
-                  </h4>
-                  <code className="text-xs text-muted-foreground block">
-                    {`{
-  "exportDate": "ISO timestamp",
-  "totalAccounts": number,
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-card/50 p-4 rounded-lg border border-accent/20">
+                    <h4 className="font-semibold mb-2 flex items-center gap-2 text-accent">
+                      <Icon name="FileJson" size={18} />
+                      Формат JSON
+                    </h4>
+                    <code className="text-xs text-muted-foreground block">
+                      {`{
+  "exportDate": "...",
   "accounts": [...]
 }`}
-                  </code>
+                    </code>
+                    <p className="text-xs text-muted-foreground mt-2">Полная структура данных</p>
+                  </div>
+
+                  <div className="bg-card/50 p-4 rounded-lg border border-secondary/20">
+                    <h4 className="font-semibold mb-2 flex items-center gap-2 text-secondary">
+                      <Icon name="FileText" size={18} />
+                      Формат TXT
+                    </h4>
+                    <code className="text-xs text-muted-foreground block">
+                      {`username:password:email:token
+@user1:pass123:...`}
+                    </code>
+                    <p className="text-xs text-muted-foreground mt-2">Компактный формат для импорта</p>
+                  </div>
                 </div>
 
-                <Button
-                  onClick={handleExportJSON}
-                  disabled={accounts.length === 0}
-                  className="w-full bg-gradient-to-r from-primary to-secondary hover:opacity-90 transition-opacity text-lg h-12 font-semibold"
-                >
-                  <Icon name="Download" size={20} className="mr-2" />
-                  Скачать JSON ({accounts.length} {accounts.length === 1 ? 'аккаунт' : 'аккаунтов'})
-                </Button>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <Button
+                    onClick={handleExportJSON}
+                    disabled={accounts.length === 0}
+                    className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity text-lg h-14 font-semibold"
+                  >
+                    <Icon name="FileJson" size={20} className="mr-2" />
+                    JSON ({accounts.length})
+                  </Button>
+
+                  <Button
+                    onClick={handleExportTXT}
+                    disabled={accounts.length === 0}
+                    className="bg-gradient-to-r from-secondary to-primary hover:opacity-90 transition-opacity text-lg h-14 font-semibold"
+                  >
+                    <Icon name="FileText" size={20} className="mr-2" />
+                    TXT ({accounts.length})
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
