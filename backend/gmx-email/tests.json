@@ -1,0 +1,31 @@
+{
+  "tests": [
+    {
+      "name": "Test verification code retrieval",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "email": "test@gmx.com",
+        "password": "testpass123"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "code": "string",
+        "email": "string",
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test missing credentials",
+      "method": "POST",
+      "path": "/",
+      "body": {},
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "tests": [
+    {
+      "name": "Test Twitter account verification",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "username": "@test_user",
+        "authToken": "Bearer_test_token",
+        "email": "test@gmx.com",
+        "emailPassword": "password123"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "verified": true,
+        "username": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test missing credentials",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "username": "@test_user"
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

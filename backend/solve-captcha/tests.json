@@ -1,0 +1,19 @@
+{
+  "tests": [
+    {
+      "name": "Test captcha solving",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "sitekey": "6LdWKJAUAAAAAB6f9YxZz8r4hK7tO3e9z4LpHKbN",
+        "url": "https://x.com"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "token": "string",
+        "success": true
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}
