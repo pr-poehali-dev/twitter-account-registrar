@@ -1,0 +1,34 @@
+{
+  "tests": [
+    {
+      "name": "Test verification request to any email",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "username": "@test_user",
+        "authToken": "Bearer_test_token_123",
+        "email": "user@gmail.com"
+      },
+      "expectedStatus": 200,
+      "expectedBody": {
+        "success": true,
+        "message": "string",
+        "email": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test missing parameters",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "username": "@test_user"
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

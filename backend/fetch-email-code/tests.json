@@ -1,0 +1,45 @@
+{
+  "tests": [
+    {
+      "name": "Test verification code retrieval from any email",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "email": "test@gmail.com",
+        "password": "testpass123"
+      },
+      "expectedStatus": 401,
+      "expectedBody": {
+        "error": "string",
+        "hint": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test unsupported email provider",
+      "method": "POST",
+      "path": "/",
+      "body": {
+        "email": "test@unknown-provider.com",
+        "password": "testpass123"
+      },
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string",
+        "supported": "string"
+      },
+      "bodyMatcher": "partial"
+    },
+    {
+      "name": "Test missing credentials",
+      "method": "POST",
+      "path": "/",
+      "body": {},
+      "expectedStatus": 400,
+      "expectedBody": {
+        "error": "string"
+      },
+      "bodyMatcher": "partial"
+    }
+  ]
+}

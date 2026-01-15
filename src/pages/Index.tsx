@@ -226,7 +226,7 @@ const Index = () => {
       // Шаг 3: Получение кода из почты
       updateProgress(2, 'in_progress');
       await new Promise(resolve => setTimeout(resolve, 2000));
-      const emailResponse = await fetch(func2url['gmx-email'], {
+      const emailResponse = await fetch(func2url['fetch-email-code'], {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -239,7 +239,8 @@ const Index = () => {
         const emailData = await emailResponse.json();
         updateProgress(2, 'completed', `Код получен: ${emailData.code}`);
       } else {
-        updateProgress(2, 'completed', 'Код получен (demo)');
+        const errorData = await emailResponse.json();
+        updateProgress(2, 'completed', `Получение кода (${errorData.error || 'demo'})`);
       }
 
       // Шаг 4: Подтверждение аккаунта
@@ -650,7 +651,7 @@ const Index = () => {
                   <Icon name="Zap" size={24} className="text-primary" />
                   Массовая регистрация
                 </CardTitle>
-                <CardDescription>Создайте до 10 аккаунтов GMX одновременно</CardDescription>
+                <CardDescription>Создайте до 10 аккаунтов с любым email провайдером</CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
                 <div className="bg-gradient-to-br from-primary/10 to-secondary/10 p-6 rounded-lg border-2 border-primary/20">
@@ -659,17 +660,21 @@ const Index = () => {
                       <Icon name="Mail" size={24} className="text-white" />
                     </div>
                     <div>
-                      <h3 className="font-bold text-lg">GMX Email Service</h3>
-                      <p className="text-sm text-muted-foreground">Автоматическое создание почтовых ящиков</p>
+                      <h3 className="font-bold text-lg">Поддержка любых Email сервисов</h3>
+                      <p className="text-sm text-muted-foreground">Gmail, Yahoo, Outlook, GMX, Mail.ru, Yandex и другие</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 text-sm">
                     <Icon name="CheckCircle" size={16} className="text-green-400" />
-                    <span>Привязка к Twitter аккаунтам</span>
+                    <span>Автоматическое получение кодов из любой почты</span>
                   </div>
                   <div className="flex items-center gap-2 text-sm mt-2">
                     <Icon name="CheckCircle" size={16} className="text-green-400" />
-                    <span>Автоматическая верификация</span>
+                    <span>Автоматическая верификация аккаунтов X/Twitter</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm mt-2">
+                    <Icon name="CheckCircle" size={16} className="text-green-400" />
+                    <span>Разгадывание капчи через 2captcha</span>
                   </div>
                 </div>
 
@@ -699,13 +704,13 @@ const Index = () => {
                 <div className="space-y-3">
                   <Label htmlFor="bulkEmails" className="flex items-center gap-2 text-lg">
                     <Icon name="Mail" size={20} className="text-accent" />
-                    GMX Email адреса (опционально)
+                    Email адреса (любой провайдер, опционально)
                   </Label>
                   <textarea
                     id="bulkEmails"
                     value={bulkEmails}
                     onChange={(e) => setBulkEmails(e.target.value)}
-                    placeholder={`Введите ${bulkCount} email адресов (по одному на строку):\nuser1@gmx.com\nuser2@gmx.com\n...\n\nИли оставьте пустым для автогенерации`}
+                    placeholder={`Введите ${bulkCount} email адресов (по одному на строку):\nuser1@gmail.com\nuser2@yahoo.com\nuser3@gmx.com\n...\n\nПоддерживаются: Gmail, Yahoo, Outlook, GMX, Mail.ru, Yandex, iCloud и др.\nИли оставьте пустым для автогенерации`}
                     rows={8}
                     className="w-full p-4 bg-muted/30 border-2 border-accent/20 focus:border-accent rounded-lg resize-none focus:outline-none font-mono text-sm"
                   />
